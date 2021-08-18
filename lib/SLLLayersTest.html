@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<!--suppress JSUnusedGlobalSymbols -->
+<html lang="">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>SLLLayers Test</title>
+</head>
+<body onLoad='init()'>
+<canvas id='game' width="640" height="480">Canvas not supported by your browser</canvas>
+<p>&nbsp;</p>
+
+<script src="sll.js"></script>
+<script>
+let stage;
+let quad1, quad2, quad3, quad4;
+let ball, xadj = 4, yadj = 4;
+let dirtyFrame = false;
+let ball2;
+
+let layoutBackdrop = new Image();
+layoutBackdrop.src = 'm7.jpg';
+let canvasRect = new SLLRectangle(0,0,640,480);
+
+function draw()
+{
+	let canvas = document.getElementById('game');
+	if ( ! canvas.getContext)
+		return;
+	let ctx = canvas.getContext('2d');
+	//stage.renderDirty(ctx);
+	stage.render(ctx, canvasRect);
+}
+
+function updateBall()
+{
+	let pos = ball.getPosition();
+	ball.moveTo(pos.x + xadj, pos.y + yadj);
+	pos = ball.getPosition();
+	if ((pos.x < 0) || (pos.x > 620))
+		xadj *= -1;
+	if ((pos.y < 0) || (pos.y > 460))
+		yadj *= -1;
+	ball2.moveTo(pos.x - 4, pos.y - 4);
+	draw();
+}
+
+function init()
+{
+	stage = new SLLLayer('stage', 640, 480);
+	stage.setBackgroundColor("yellow");
+	quad1 = new SLLLayer("q1", 640, 480);
+	let subChild = new SLLLayer("s1", 640, 480);
+	subChild.setBackgroundColor("Silver");
+	quad1.addChild(subChild, new SLLRectangle(160,120,320,240));
+	quad1.setBackgroundColor("red");
+	stage.addChild(quad1, new SLLRectangle(10,10,300,220));
+	quad2 = new SLLLayer("q2", 640, 480);
+	quad2.setBackgroundColor("green");
+	stage.addChild(quad2, new SLLRectangle(330,10,300,220));
+//	quad3 = new SLLLayer("q3", 640, 480);
+//	quad3.setBackgroundColor("blue");
+	quad3 = new SLLImageLayer("q3", layoutBackdrop, new SLLRectangle(160,240,320,240));
+	stage.addChild(quad3, new SLLRectangle(10,250,300,220));
+	quad4 = new SLLLayer("q4", 640, 480);
+	quad4.setBackgroundColor("purple");
+	let subChild2 = new SLLLayer("s2", 640, 480);
+	subChild2.setBackgroundColor("Gold");
+	quad4.addChild(subChild2, new SLLRectangle(160,120,320,240));
+	stage.addChild(quad4, new SLLRectangle(330,250,300,220));
+
+	ball = new SLLLayer("ball", 20,20);
+	ball.setBackgroundColor("white");
+	stage.addChild(ball, ball._logicalPosition);
+	ball2 = new SLLLayer("ball2", 20,20);
+	ball2.setBackgroundColor("pink");
+//	quad3.addChild(ball, ball.logicalPosition);
+	stage.addChild(ball2, ball._logicalPosition);
+	
+//	stage.addDirty(null);
+	setInterval(updateBall, 30);
+	draw();
+}
+</script>
+</body>
+</html>
