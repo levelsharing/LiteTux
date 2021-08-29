@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<!--suppress JSUnusedGlobalSymbols -->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>SLLLayers Test</title>
+</head>
+<body onLoad='init()'>
+<canvas id='game' width="640" height="480" onMouseDown="mouseDown(event)" onMouseUp="mouseUp(event)" onMouseMove="mouseMove(event)">Canvas not supported by your browser</canvas>
+<p>&nbsp;</p>
+
+<script src="sll.js"></script>
+<script src="sll_gui.js"></script>
+<script>
+    let solImg = new Image();
+    solImg.src = "engsol.png";
+    let imageButtons = {
+    "Wood" : {"x" : 708, "y" : 3, "width" : 112, "height" : 55, "offX" : 0, "offY" : 0},
+    "RestartUp" : {"x" : 3, "y" : 608, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    "RestartOver" : {"x" : 223, "y" : 608, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    "RestartDown" : {"x" : 442, "y" : 608, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    "ContinueUp" : {"x" : 662, "y" : 608, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    "ContinueOver" : {"x" : 3, "y" : 662, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    "ContinueDown" : {"x" : 223, "y" : 662, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    "BlankButton" : {"x" : 442, "y" : 662, "width" : 216, "height" : 50, "offX" : -108, "offY" : -25},
+    };
+
+    let stage;
+    let canvasRect = new SLLRectangle(0,0,640,480);
+    let lastClick, isMouseDown;
+
+    class ClickView extends SLLTextLayer {
+        constructor(lid, bounds) {
+            super(lid, bounds, "No button clicked")
+        }
+
+        buttonClicked(btn) {
+            this.setText("Last button clicked: " + btn.id);
+        }
+    }
+
+    function canvasMouseCoordsFromEvent(event)
+    {
+        let canvas = document.getElementById('game');
+
+        let ox = event.offsetX;
+        if (ox === undefined)
+            ox = event.pageX-canvas.offsetLeft;
+        let oy = event.offsetY;
+        if (oy === undefined)
+            oy = event.pageY-canvas.offsetTop;
+        return new SLLPoint(ox, oy);
+    }
+
+    function mouseDown(event)
+    {
+        if ( !stage ) return;
+        isMouseDown = true;
+        let p = canvasMouseCoordsFromEvent(event);
+        if (stage.mouseDown(p.x, p.y))
+            draw();
+    }
+
+    function mouseMove(event)
+    {
+        if ( !stage ) return;
+        let p = canvasMouseCoordsFromEvent(event);
+        if (stage.mouseMove(p.x, p.y))
+            draw();
+    }
+
+    function mouseUp(event)
+    {
+        if ( !stage ) return;
+        isMouseDown = false;
+        let p = canvasMouseCoordsFromEvent(event);
+        if (stage.mouseUp(p.x, p.y))
+            draw();
+    }
+    function draw()
+    {
+        let canvas = document.getElementById('game');
+        if ( ! canvas.getContext)
+            return;
+        let ctx = canvas.getContext('2d');
+        stage.render(ctx, canvasRect);
+    }
+
+
+    function init()
+    {
+        stage = new SLLLayer('stage', 640, 480);
+        stage.setBackgroundColor("#555");
+        this.lastClick = new ClickView('lastClick', new SLLRectangle(100,200,400,50))
+        stage.addChild(this.lastClick)
+        let button = new SLLTextButton('btn', new SLLRectangle(100,120,400,50), "Hello World!");
+        button.setClickHandler(this.lastClick);
+        stage.addChild(button);
+
+        let woodButton = new SLLImageButton('wood', solImg, imageButtons.Wood, 5);
+        woodButton.moveTo(50,50);
+        woodButton.setText("Wood!");
+        woodButton.setClickHandler(this.lastClick);
+        stage.addChild(woodButton);
+
+        let blankButton = new SLLImageButton("blank", solImg, imageButtons.BlankButton, 5);
+        blankButton.moveTo(350,50);
+        blankButton.setText("Blank");
+        blankButton.setClickHandler(this.lastClick);
+        stage.addChild(blankButton);
+
+        let multiImageButton = new SLLImageButton("Restart", solImg, imageButtons.RestartUp, 0);
+        multiImageButton.moveTo(50, 350);
+        multiImageButton.setClickHandler(this.lastClick);
+        multiImageButton.setClips(imageButtons.RestartUp, imageButtons.RestartOver, imageButtons.RestartDown, imageButtons.BlankButton);
+        stage.addChild(multiImageButton);
+
+        draw();
+    }
+</script>
+</body>
+</html>
