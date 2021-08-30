@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<!--suppress JSUnusedGlobalSymbols -->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>SLLLayers TileMap Test</title>
+</head>
+<body onLoad='init()'>
+<canvas id='game' width="640" height="480" onMouseDown="mouseDown(event)" onMouseUp="mouseUp(event)" onMouseMove="mouseMove(event)">Canvas not supported by your browser</canvas>
+<p>&nbsp;</p>
+
+<script src="sll.js"></script>
+<script src="tileMap.js"></script>
+<script>
+let stage;
+let canvasRect = new SLLRectangle(0,0,640,480);
+let map, tileLayer, palette;
+let gameViewport;
+let tileset = new Image();
+tileset.src = "tileset.png";
+
+function canvasMouseCoordsFromEvent(event)
+{
+	let canvas = document.getElementById('game');
+
+	let ox = event.offsetX;
+	if (ox === undefined)
+		ox = event.pageX-canvas.offsetLeft;
+	let oy = event.offsetY;
+	if (oy === undefined)
+		oy = event.pageY-canvas.offsetTop;
+	return new SLLPoint(ox, oy);	
+}
+
+function mouseDown(event)
+{
+	if ( !stage ) return;
+	isMouseDown = true;
+	let p = canvasMouseCoordsFromEvent(event);
+	if (stage.mouseDown(p.x, p.y))
+		draw();
+	let pm = tileLayer.convertRealPointToLogicalPoint(p);
+	let tx = Math.floor(pm.x / 32);
+	let ty = Math.floor(pm.y / 32);
+	console.log(`pm = ${pm.x},${pm.y}`);
+	if ((tx >= 0) && (tx < 3) && (ty >= 0) && (ty < 3)) {
+		console.log(`setting tile ${tx},${ty} to ${palette.currentSelected}`);
+		map.setTile(tx, ty, palette.currentSelected);
+		draw();
+	}
+}
+
+function mouseMove(event)
+{
+	if ( !stage ) return;
+	let p = canvasMouseCoordsFromEvent(event);
+	if (stage.mouseMove(p.x, p.y))
+		draw();
+}
+
+function mouseUp(event)
+{
+	if ( !stage ) return;
+	isMouseDown = false;
+	let p = canvasMouseCoordsFromEvent(event);
+	if (stage.mouseUp(p.x, p.y))
+		draw();
+}
+function draw()
+{
+	let canvas = document.getElementById('game');
+	if ( ! canvas.getContext)
+		return;
+	let ctx = canvas.getContext('2d');
+	stage.render(ctx, canvasRect);
+}
+
+function scrollTest() {
+	gameViewport.viewport.x++;
+	if (gameViewport.viewport.x > 2944)
+		gameViewport.viewport.x = 0;
+	draw()
+	window.requestAnimationFrame(scrollTest);
+}
+
+function init()
+{
+	stage = new SLLLayer('stage', 640, 480);
+	stage.setBackgroundColor("#555");
+	
+	map = new TileMap(3,3)
+	for (let cntr = 0; cntr < 9; ++cntr)
+		map.setTile(cntr%3, Math.floor(cntr/3), cntr);
+	let tileRenderer = new TileRenderer();
+	tileLayer = new TileMapLayer('tiles', 96,96, map, tileRenderer);
+	tileLayer.moveTo(100,100);
+	tileLayer.adjustPosition(new SLLRectangle(100,100,192,192));
+	stage.addChild(tileLayer);
+	console.log(`tile size is ${tileRenderer.tileSize.width},${tileRenderer.tileSize.height}`);
+	palette = new TilePalette("tilepal", 4,2,tileRenderer,3);
+	stage.addChild(palette);
+
+	let gameMap = new TileMap(200,14);
+	for (let r = 0; r < 14; ++r)
+		for (let c = 0; c < 200; ++c)
+			gameMap.setTile(c,r,(c+r)%16);
+	let tileImageRenderer = new TileImageRenderer(tileset, new SLLRectangle(0,0,16,16), 1, 16);
+	gameViewport = new TileMapLayer("gameViewport", 16*16, 16*14, gameMap, tileImageRenderer);
+	gameViewport.moveTo(320,10);
+	gameViewport.viewport.x=5;
+	stage.addChild(gameViewport);
+	window.requestAnimationFrame(scrollTest);
+}
+</script>
+</body>
+</html>
