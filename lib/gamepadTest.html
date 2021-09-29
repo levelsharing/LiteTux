@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gamepad Test</title>
+</head>
+<body>
+<canvas id='game' width="640" height="480" >Canvas not supported by your browser</canvas>
+<p>&nbsp;</p>
+
+<script src="sll.js"></script>
+<script src="gamepad.js"></script>
+<script>
+    let backdrop = new Image();
+    let canvasRect =  new SLLRectangle(0,0,640,480);
+    backdrop.src = "gamepad.jpg";
+    let stage, virtualGamepad;
+
+    let buttonPositions = [
+        new SLLRectangle(406,266,25,25), // "A": 0,
+        new SLLRectangle(432,242,25,25),// "B": 1,
+        new SLLRectangle(378,242,25,25),// "X": 2,
+        new SLLRectangle(406,220,25,25),// "Y": 3,
+        new SLLRectangle(160,90,104,42),// "LB": 4,
+        new SLLRectangle(392,90,104,42),// "RB": 5,
+        new SLLRectangle(160,30,56,56),// "LTrigger": 6,
+        new SLLRectangle(434,30,56,56),// "RTrigger": 7,
+        new SLLRectangle(278,245,20,20),// "Back": 8,
+        new SLLRectangle(335,245,20,20),// "Start": 9,
+        new SLLRectangle(198,228,25,25),// "LeftStickButton": 10,
+        new SLLRectangle(356,292,25,25),// "RightStickButton": 11,
+        new SLLRectangle(250,285,20,20),// "DPadUp": 12,
+        new SLLRectangle(250,325,20,20),// "DPadDown": 13,
+        new SLLRectangle(230,300,20,20),// "DPadLeft": 14,
+        new SLLRectangle(270,300,20,20)// "DPadRight": 15
+    ]
+    class GPDemo extends SLLImageLayer{
+        constructor() {
+            super("gpdemo", backdrop, canvasRect);
+            this.buttons = [];
+            for (let i = 0; i < buttonPositions.length; ++i) {
+                let btn = new SLLLayer("B_"+i, buttonPositions[i].width, buttonPositions[i].height);
+                btn.moveTo(buttonPositions[i].x, buttonPositions[i].y);
+                btn.setBackgroundColor("red");
+                this.addChild(btn);
+                this.buttons.push(btn);
+            }
+        }
+
+        pollGamepad() {
+            for (let i = 0; i < this.buttons.length; ++i) {
+                this.buttons[i].setVisible(virtualGamepad.isButtonDown(i));
+            }
+        }
+    }
+
+    function draw()
+    {
+        let canvas = document.getElementById('game');
+        if ( ! canvas.getContext)
+            return;
+        let ctx = canvas.getContext('2d');
+        stage.render(ctx, canvasRect);
+    }
+
+    function  polling() {
+        stage.pollGamepad(virtualGamepad);
+        draw();
+        window.requestAnimationFrame(polling);
+    }
+
+    function init() {
+        virtualGamepad = new VirtualGamepad();
+        stage = new GPDemo();
+        window.requestAnimationFrame(polling);
+    }
+
+    init();
+</script>
+</body>
+</html>
