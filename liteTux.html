@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>LiteTux Game</title>
+</head>
+<body onLoad='init()'>
+<canvas id='game' width="640" height="480" onMouseDown="mouseDown(event)" onMouseUp="mouseUp(event)" onMouseMove="mouseMove(event)">Canvas not supported by your browser</canvas>
+<p>&nbsp;Tux image: <a href="https://commons.wikimedia.org/wiki/File:Tux.png">lewing@isc.tamu.edu Larry Ewing and The GIMP</a>, Attribution, via Wikimedia Commons</p>
+
+<script src="lib/sll.js"></script>
+<script src="lib/sll_gui.js"></script>
+<script src="lib/tileMap.js"></script>
+<script src="lib/gamepad.js"></script>
+<script src="userMaps.js"></script>
+<script src="liteTux_sprites.js"></script>
+<script src="liteTux.js"></script>
+<script src="litetux_screens.js"></script>
+<script>
+    let gameConfig = {
+        "CANNON" : "sound/cannon.mp3",
+        "COIN" : "sound/coin.mp3",
+        "DEATH" : "sound/death.mp3",
+        "GEM" : "sound/gem.mp3",
+        "JUMP" : "sound/jump.mp3",
+        "STOMP" : "sound/stomp.mp3",
+        "BACKGROUND" : null//"sound/PP_Fight_or_Flight_FULL_Loop.mp3"
+    }
+
+    LITETUX_TITLE = new Image();
+    LITETUX_TITLE.src = "images/LiteTuxTitle.jpg";
+    LITETUX_INSTRUCTIONS = new Image();
+    LITETUX_INSTRUCTIONS.src = "images/LiteTuxInstructions.png";
+    LITETUX_LEVELCOMPLETE = new Image();
+    LITETUX_LEVELCOMPLETE.src = "images/LiteTuxLevelComplete.png";
+
+    FRAME_TIME = 1000.0/60.0;
+    MAX_SKIP = FRAME_TIME * 3;
+    let lastFrameTime = Date.now();
+    let stage, isMouseDown;
+    let canvasRect = new SLLRectangle(0,0,640,480);
+
+    function canvasMouseCoordsFromEvent(event)
+    {
+        let canvas = document.getElementById('game');
+
+        let ox = event.offsetX;
+        if (ox === undefined)
+            ox = event.pageX-canvas.offsetLeft;
+        let oy = event.offsetY;
+        if (oy === undefined)
+            oy = event.pageY-canvas.offsetTop;
+        return new SLLPoint(ox, oy);
+    }
+
+    function mouseDown(e)
+    {
+        if ( !stage ) return;
+        isMouseDown = true;
+        let p = canvasMouseCoordsFromEvent(e);
+        if (stage.mouseDown(p.x, p.y))
+            draw();
+    }
+
+    function mouseMove(event)
+    {
+        if ( !stage ) return;
+        let p = canvasMouseCoordsFromEvent(event);
+        if (stage.mouseMove(p.x, p.y))
+            draw();
+    }
+
+    function mouseUp(e)
+    {
+        if ( !stage ) return;
+        isMouseDown = false;
+        let p = canvasMouseCoordsFromEvent(e);
+        if (stage.mouseUp(p.x, p.y))
+            draw();
+    }
+
+    function draw()
+    {
+        let canvas = document.getElementById('game');
+        if ( ! canvas.getContext)
+            return;
+        let ctx = canvas.getContext('2d');
+        stage.render(ctx, canvasRect);
+    }
+
+    function init()
+    {
+        stage = new LiteTuxMain(canvasRect, gameConfig);
+        stage.gameScreen.setLevel(USER_MAP_0);
+        draw();
+
+        if (document.addEventListener)
+            document.addEventListener("keydown", handleKeyDown, false);
+        else if (document.attachEvent)
+            document.attachEvent("onkeydown", handleKeyDown);
+        if (document.addEventListener)
+            document.addEventListener("keyup", handleKeyUp, false);
+        else if (document.attachEvent)
+            document.attachEvent("onkeyup", handleKeyUp);
+
+        animationLoop();
+    }
+
+    function animationLoop() {
+
+        let newTime = Date.now();
+        if (lastFrameTime+MAX_SKIP < newTime)
+            lastFrameTime = newTime - MAX_SKIP;
+        let needsRedraw = false;
+        while (lastFrameTime+FRAME_TIME <= newTime) {
+            needsRedraw |= stage.tick(FRAME_TIME);
+            lastFrameTime += FRAME_TIME;
+        }
+        if (needsRedraw)
+            draw();
+        window.requestAnimationFrame(animationLoop);
+    }
+
+    function handleKeyDown(event) {
+        if ((stage.handleKeyDown(event.key) && (event && event.preventDefault)))
+            event.preventDefault();
+    }
+
+    function handleKeyUp(event) {
+        if ((stage.handleKeyUp(event.key)) && (event && event.preventDefault))
+            event.preventDefault();
+    }
+</script>
+</body>
+</html>
