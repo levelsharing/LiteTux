@@ -122,6 +122,11 @@ class LiteTuxWorldSelection extends SLLLayer {
             }
             this.worldButtons.push(world);
         }
+
+        this.sharedLevelBtn = owner.buildDisplayButton(this,
+            new SLLRectangle(50, 440, 550, 35),
+            "Play level shared with you");
+        this.sharedLevelBtn.setDisabled( ! owner.hasSharedLevel());
     }
 
     /**
@@ -129,6 +134,8 @@ class LiteTuxWorldSelection extends SLLLayer {
      * @param btn:SLLTextButton button that was clicked
      */
     buttonClicked(btn) {
+        if (btn === this.sharedLevelBtn)
+            return this.owner.startGame(this.owner.sharedWorldID, 0);
         let world = 1, lvl = 0;
         for (let w = 0; w < WORLDS.length;++w) {
             for (let l = 0; l < WORLDS[w].length; ++l) {
@@ -142,7 +149,11 @@ class LiteTuxWorldSelection extends SLLLayer {
     }
 
     update(){}
-    restart() { }
+    restart() {
+        let hasShared = this.owner.hasSharedLevel();
+        this.sharedLevelBtn.setDisabled(!hasShared);
+        this.sharedLevelBtn.setVisible(hasShared);
+    }
 
 }
 
@@ -196,6 +207,10 @@ class LiteTuxMain extends SLLLayer {
         this.backgroundMusic.loop = true;
         //this.backgroundMusicStarted = false;
         //this.backgroundMusic.play();
+
+        // shared level
+        this.sharedWorldID = WORLDS.length;
+        this.sharedLevel = null;
     }
 
     /** utility method for child displays to quickly build UI buttons
@@ -270,6 +285,8 @@ class LiteTuxMain extends SLLLayer {
      */
     levelCompleted() {
         ++this.currentLevel;
+        if (this.currentWorld === this.sharedWorldID)
+            return this.swapDisplays(LITE_TUX_SCREEN_IDS.WORLDS);
         if (this.currentLevel < WORLDS[this.currentWorld].length) {
             //console.log("should be playing level " + this.currentLevel);
             this.worldsScreen.worldButtons[this.currentWorld][this.currentLevel].setDisabled(false);
@@ -300,7 +317,10 @@ class LiteTuxMain extends SLLLayer {
     startGame(world, lvl) {
         this.currentWorld = world;
         this.currentLevel = lvl;
-        this.gameScreen.setLevel(WORLDS[world][lvl]);
+        if (world === this.sharedWorldID)
+            this.gameScreen.setLevel(this.sharedLevel);
+        else
+            this.gameScreen.setLevel(WORLDS[world][lvl]);
         console.log(`Selected world${world}-${lvl}`);
         this.gameScreen.restart();
         this.swapDisplays(LITE_TUX_SCREEN_IDS.GAME);
@@ -313,4 +333,8 @@ class LiteTuxMain extends SLLLayer {
     playSound(soundID) {
         this.sounds[soundID].cloneNode(true).play();
     }
+
+    setSharedLevel(lvl) { this.sharedLevel = lvl; }
+
+    hasSharedLevel() { return this.sharedLevel != null; }
 }

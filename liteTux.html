@@ -12,6 +12,7 @@
 <script src="lib/sll_gui.js"></script>
 <script src="lib/tileMap.js"></script>
 <script src="lib/gamepad.js"></script>
+<script src="lib/base64url.js"></script>
 <script src="userMaps.js"></script>
 <script src="liteTux_sprites.js"></script>
 <script src="liteTux.js"></script>
@@ -90,8 +91,16 @@
 
     function init()
     {
+        let urlParams = new URLSearchParams(window.location.search);
+        let lvlParam = urlParams.get('lvl');
+        base64url = new Base64url();
+
         stage = new LiteTuxMain(canvasRect, gameConfig);
         stage.gameScreen.setLevel(USER_MAP_0);
+        if (lvlParam != null)
+            stage.setSharedLevel(
+                base64url.hexToTileMap(
+                    base64url.decodeHexString(lvlParam)));
         draw();
 
         if (document.addEventListener)
