@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<!--suppress ALL -->
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Base64Hex Tests</title>
+</head>
+<body>
+    <h1>Base 64 encoder test</h1>
+<p>This is a simple test of the base 64 (url) class and lets you enter
+hex text (0-9,A-F), and encoded text and convert between the 2. Automated unit tests
+are also provided to automate testing but having demo is always nice.</p>
+
+<h2>Hex Text to convert</h2>
+    <button id="decode">Decode encoded</button>
+    <input id="hex" type="text">
+    <br>
+
+<h2>Base64url Encoded text</h2>
+    <button id="encode">Encode Hex string</button>
+    <input id="base64" type="text">
+    <br>
+
+<h2>Automated Tests</h2>
+    <div id="tests"></div>
+
+<script src="tileMap.js"></script>
+<script src="base64url.js"></script>
+<script>
+    document.getElementById("decode").onclick = () => {
+        let base64 = new Base64url();
+        let encodeText = document.getElementById("base64").value;
+        document.getElementById("hex").value = base64.decodeHexString(encodeText);
+    }
+    document.getElementById("encode").onclick = () => {
+        let base64 = new Base64url();
+        let decodeText = document.getElementById("hex").value;
+        document.getElementById("base64").value = base64.encodeHexString(decodeText);
+    }
+
+    function expect(reason, source, dest) {
+        let tests = document.getElementById("tests");
+        let passed = (source === dest);
+        let s = reason + ( passed ? " passed." : " FAILED!!!");
+        console.log(s);
+        tests.innerHTML += "<li>" + s;
+        if (!passed) {
+            s = `-> ${source} does not match ${dest}`
+            console.log(s);
+            tests.innerHTML += s;
+        }
+        tests.innerHTML += "</li>";
+        return passed ? 1 : 0;
+    }
+
+    let base64 = new Base64url();
+    let passedTests = 0;
+    let dec = base64.encodeBinaryString(String.fromCharCode(251)+String.fromCharCode(240)+'A');
+    passedTests += expect("can encoding binary string", dec, "-_BB");
+
+    dec = base64.base64ToBase64url("AZaz09+/");
+    passedTests += expect("can convert from base64 to base64url", dec, "AZaz09-_");
+
+    dec = base64.base64urlToBase64("AZaz09-_");
+    passedTests += expect("can convert from base64 url to base64", dec, "AZaz09+/");
+
+    dec = base64.encodeHexString("4d616e");
+    passedTests += expect("encoding hex 4d616e becomes TWFu", dec, "TWFu");
+
+    dec = base64.encodeHexString("FBF000");
+    passedTests += expect("encoding hex FBF000 becomes -_AA", dec, "-_AA");
+
+    dec = base64.decodeBinaryString("-_BB");
+    passedTests += expect("can decode binary string", dec, String.fromCharCode(251)+String.fromCharCode(240)+'A');
+
+    dec = base64.decodeHexString("TWFu");
+    passedTests += expect("decoding hex TWFu becomes 4D616E", dec, "4D616E");
+
+    dec = base64.decodeHexString("-_AA");
+    passedTests += expect("decoding hex -_AA becomes FBF000", dec, "FBF000");
+
+    let testMap = new TileMap(4,4);
+    for (let i = 0; i < 16; ++i)
+        testMap.setTile(i%4,Math.floor(i/4),i);
+    dec = base64.tileMapToHex(testMap)
+    passedTests += expect("Can convert tile map to hex", dec, "04040123456789ABCDEF" );
+
+    dec = base64.hexToTileMap("04040123456789ABCDEF");
+    passedTests += expect("Jan convert hex back into tile map",
+        JSON.stringify(testMap),JSON.stringify(dec));
+</script>
+</body>
+</html>
