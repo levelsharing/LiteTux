@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>LiteTux Editor</title>
+</head>
+<body onLoad='init()'>
+<canvas id='game' width="1072" height="603" onMouseDown="mouseDown(event)" onMouseUp="mouseUp(event)" onMouseMove="mouseMove(event)">Canvas not supported by your browser</canvas>
+<p id="shareLevel">&nbsp;</p>
+
+<script src="../lib/sll.js"></script>
+<script src="../lib/sll_gui.js"></script>
+<script src="../lib/tileMap.js"></script>
+<script src="../lib/gamepad.js"></script>
+<script src="../lib/base64url.js"></script>
+<script src="../liteTux_sprites.js"></script>
+<script src="../liteTux.js"></script>
+<script src="LiteTuxEditorConfig.js"></script>
+<script src="editingUtil.js"></script>
+<script src="stats/stats.js"></script>
+<script src="stats/AnalysisScreen.js"></script>
+<script src="editor.js"></script>
+<script>
+LITETUX_LEVELCOMPLETE = new Image();
+LITETUX_LEVELCOMPLETE.src = "../images/LiteTuxLevelComplete.png";
+LITE_TUX_TILES.src = "res/spritesheet.png";
+let stage, isMouseDown;
+let canvasRect = new SLLRectangle(0,0,1072,603);
+let lastUpdate = Date.now();
+let base64url = new Base64url();
+
+function canvasMouseCoordsFromEvent(event)
+{
+	let canvas = document.getElementById('game');
+
+	let ox = event.offsetX;
+	if (ox === undefined)
+		ox = event.pageX-canvas.offsetLeft;
+	let oy = event.offsetY;
+	if (oy === undefined)
+		oy = event.pageY-canvas.offsetTop;
+	return new SLLPoint(ox, oy);	
+}
+
+function mouseDown(e)
+{
+	if ( !stage ) return;
+	isMouseDown = true;
+	let p = canvasMouseCoordsFromEvent(e);
+	if (stage.mouseDown(p.x, p.y))
+		draw();
+}
+
+function mouseMove(event)
+{
+	if ( !stage ) return;
+	let p = canvasMouseCoordsFromEvent(event);
+	if (stage.mouseMove(p.x, p.y))
+		draw();
+}
+
+function mouseUp(e)
+{
+	if ( !stage ) return;
+	isMouseDown = false;
+	let p = canvasMouseCoordsFromEvent(e);
+	if (stage.mouseUp(p.x, p.y))
+		draw();
+}
+
+function draw()
+{
+	let canvas = document.getElementById('game');
+	if ( ! canvas.getContext)
+		return;
+	let ctx = canvas.getContext('2d');
+	stage.render(ctx, canvasRect);
+}
+
+function init()
+{
+	stage = new EditorMain(canvasRect);
+    urlParams = new URLSearchParams(window.location.search);
+    lvlParam = urlParams.get('lvl');
+    if (lvlParam != null)
+        stage.setStartLevel(base64url.hexToTileMap(base64url.decodeHexString(lvlParam)));
+
+    draw();
+
+    if (document.addEventListener)
+        document.addEventListener("keydown", handleKeyDown, false);
+    else if (document.attachEvent)
+        document.attachEvent("onkeydown", handleKeyDown);
+    if (document.addEventListener)
+        document.addEventListener("keyup", handleKeyUp, false);
+    else if (document.attachEvent)
+        document.attachEvent("onkeyup", handleKeyUp);
+
+    animationLoop();
+}
+
+function animationLoop() {
+    let newTime = Date.now();
+    if (stage.tick(newTime - lastUpdate))
+        draw();
+    lastUpdate = newTime;
+    window.requestAnimationFrame(animationLoop);
+}
+
+function handleKeyDown(event) {
+    if ((stage.handleKeyDown(event.key) && (event && event.preventDefault)))
+        event.preventDefault();
+}
+
+function handleKeyUp(event) {
+    if ((stage.handleKeyUp(event.key)) && (event && event.preventDefault))
+        event.preventDefault();
+}
+
+function shareLevel(lvl) {
+    let encode = base64url.encodeHexString(base64url.tileMapToHex(lvl));
+    let share = document.getElementById("shareLevel");
+    let url=`../litetux.html?lvl=${encode}`;
+    let eurl = `editor.html?lvl=${encode}`;
+    share.innerHTML=`Game link for level is <a href=${url}>${url}</a><br>Editor link for level is <a href=${eurl}>${eurl}</a>`
+
+}
+</script>
+</body>
+</html>
