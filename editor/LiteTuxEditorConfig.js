@@ -68,13 +68,70 @@ EDITOR_CONFIG = {
     "suggestionGenerators"      : [
         "generators/EchoGenerator.js", "generators/bpe_autoencoder.js", "generators/bpe_autoencoder.js",
         "generators/bpe_autoencoder.js", "generators/bpe_autoencoder.js", "generators/bpe_autoencoder.js",
-        "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js"
+        "generators/evolutionGen.js",  "generators/evolutionGen.js",  "generators/evolutionGen.js"
     ],
     "suggestionGeneratorParams"      : [
         "{}", "{\"noise\":0.01,\"clean\":false}",  "{\"noise\":0.01,\"clean\":true}",
         "{\"noise\":0.02,\"clean\":false}",  "{\"noise\":0.02,\"clean\":true}", "{\"noise\":0.04}",
-        "{\"noise\":0.07}", "{\"noise\":0.08}", "{\"noise\":0.09}"
-    ],
+        "{\"fitness\" : [    {\"name\": \"interest\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 1},\n" +
+        "    {\"name\": \"enemies\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 1}," +
+        "    {\"name\": \"hazards\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 1}," +
+        "    {\"name\": \"rewards\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 1}," +
+        "    {\"name\": \"leniency\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 1}," +
+        "    {\"name\": \"adjleniency\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 2}," +
+        "    {\"name\": \"reachable\", \"target\": 18, \"base\" : 1, \"weight\": 1, \"mult\" : 10}," +
+        "    {\"name\": \"reqJumps\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 1}], " +
+        "\"mutatorWeights\" : {\n" +
+        "    \"basicMutatorWeight\" : 100,\n" +
+        "    \"mixedColumnWeight\" : 10,\n" +
+        "    \"noisyMixedColumnWeight\" : 5,\n" +
+        "    \"noisyMixedColumnNoise\" : .1,\n" +
+        "    \"shiftedColumnWeight\" : 10,\n" +
+        "    \"shiftedColumnMin\" : -3,\n" +
+        "    \"shiftedColumnMax\" : 3,\n" +
+        "    \"duplicateColumnWeight\" : 5,\n" +
+        "    \"swapColumnWeight\" : 5,\n" +
+        "} }",
+
+        "{\"fitness\" : [    {\"name\": \"interest\", \"target\": 1, \"base\" : 1, \"weight\": 0, \"mult\" : 1},\n" +
+        "    {\"name\": \"enemies\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 0}," +
+        "    {\"name\": \"hazards\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 0}," +
+        "    {\"name\": \"rewards\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 0}," +
+        "    {\"name\": \"leniency\", \"target\": 1, \"base\" : 1, \"weight\": 1, \"mult\" : 0}," +
+        "    {\"name\": \"adjleniency\", \"target\": 20, \"base\" : 30, \"weight\": 1, \"mult\" : 3}," +
+        "    {\"name\": \"reachable\", \"target\": 18, \"base\" : 1, \"weight\": 1, \"mult\" : 10}," +
+        "    {\"name\": \"reqJumps\", \"target\": 1, \"base\" : 1, \"weight\": 0, \"mult\" : 0}], " +
+        "\"mutatorWeights\" : {\n" +
+        "    \"basicMutatorWeight\" : 80,\n" +
+        "    \"mixedColumnWeight\" : 1,\n" +
+        "    \"noisyMixedColumnWeight\" : 25,\n" +
+        "    \"noisyMixedColumnNoise\" : .05,\n" +
+        "    \"shiftedColumnWeight\" : 5,\n" +
+        "    \"shiftedColumnMin\" : -3,\n" +
+        "    \"shiftedColumnMax\" : 3,\n" +
+        "    \"duplicateColumnWeight\" : 2,\n" +
+        "    \"swapColumnWeight\" : 10,\n" +
+        "} }",
+
+        "{\"fitness\" : [    {\"name\": \"interest\", \"target\": 1, \"base\" : 1, \"weight\": 0, \"mult\" : 1},\n" +
+        "    {\"name\": \"enemies\", \"target\": 2, \"base\" : 3, \"weight\": 1, \"mult\" : 3}," +
+        "    {\"name\": \"hazards\", \"target\": 1, \"base\" : 1, \"weight\": 0, \"mult\" : 5}," +
+        "    {\"name\": \"rewards\", \"target\": 3, \"base\" : 3, \"weight\": 1, \"mult\" : 0}," +
+        "    {\"name\": \"leniency\", \"target\": 1, \"base\" : 1, \"weight\": 0, \"mult\" : 0}," +
+        "    {\"name\": \"adjleniency\", \"target\": 20, \"base\" : 20, \"weight\": 1, \"mult\" : 5}," +
+        "    {\"name\": \"reachable\", \"target\": 18, \"base\" : 1, \"weight\": 1, \"mult\" : 1}," +
+        "    {\"name\": \"reqJumps\", \"target\": 1, \"base\" : 1, \"weight\": 0, \"mult\" : 1}], " +
+        "\"mutatorWeights\" : {\n" +
+        "    \"basicMutatorWeight\" : 50,\n" +
+        "    \"mixedColumnWeight\" : 5,\n" +
+        "    \"noisyMixedColumnWeight\" : 5,\n" +
+        "    \"noisyMixedColumnNoise\" : .1,\n" +
+        "    \"shiftedColumnWeight\" : 15,\n" +
+        "    \"shiftedColumnMin\" : -3,\n" +
+        "    \"shiftedColumnMax\" : 3,\n" +
+        "    \"duplicateColumnWeight\" : 10,\n" +
+        "    \"swapColumnWeight\" : 10,\n" +
+        "} }"    ],
 
 
     // TODO Button Bar
