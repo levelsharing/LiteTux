@@ -66,13 +66,13 @@ EDITOR_CONFIG = {
         {"x": 830, "y": 436, "width": 108, "height": 84}
     ],
     "suggestionGenerators"      : [
-        "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js",
-        "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js",
+        "generators/EchoGenerator.js", "generators/bpe_autoencoder.js", "generators/bpe_autoencoder.js",
+        "generators/bpe_autoencoder.js", "generators/bpe_autoencoder.js", "generators/bpe_autoencoder.js",
         "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js"
     ],
     "suggestionGeneratorParams"      : [
-        "{\"noise\":0.01}", "{\"noise\":0.02}", "{\"noise\":0.03}",
-        "{\"noise\":0.04}", "{\"noise\":0.05}", "{\"noise\":0.06}",
+        "{}", "{\"noise\":0.01,\"clean\":false}",  "{\"noise\":0.01,\"clean\":true}",
+        "{\"noise\":0.02,\"clean\":false}",  "{\"noise\":0.02,\"clean\":true}", "{\"noise\":0.04}",
         "{\"noise\":0.07}", "{\"noise\":0.08}", "{\"noise\":0.09}"
     ],
 
