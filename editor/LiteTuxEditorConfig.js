@@ -7,7 +7,6 @@
  * Note that this is commented, which is not supported in json files, but could remove comments to allow changing
  * editor configurations through json
  */
-console.log("Debug litetux config 0 loaeded");
 EDITOR_CONFIG = {
     "FRAME_TIME" : 1000.0/60.0,
     "MAX_SKIP" : 1000.0/20,
@@ -67,9 +66,10 @@ EDITOR_CONFIG = {
         {"x": 830, "y": 436, "width": 108, "height": 84}
     ],
     "suggestionGenerators"      : [
-        "editor/generators/echo.js",  "editor/generators/echo.js",  "editor/generators/echo.js",
-        "editor/generators/echo.js",  "editor/generators/echo.js",  "editor/generators/echo.js",
-        "editor/generators/echo.js",  "editor/generators/echo.js",  "editor/generators/echo.js"],
+        "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js",
+        "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js",
+        "generators/EchoGenerator.js",  "generators/EchoGenerator.js",  "generators/EchoGenerator.js"
+    ],
     "suggestionGeneratorParams"      : [
         "{\"noise\":0.01}", "{\"noise\":0.02}", "{\"noise\":0.03}",
         "{\"noise\":0.04}", "{\"noise\":0.05}", "{\"noise\":0.06}",
