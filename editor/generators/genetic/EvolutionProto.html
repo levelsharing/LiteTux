@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prototype of Evolution Map Gen</title>
+</head>
+<body onLoad='init()'>
+<canvas id='game' width="1072" height="603" onMouseDown="mouseDown(event)" onMouseUp="mouseUp(event)" onMouseMove="mouseMove(event)">Canvas not supported by your browser</canvas>
+<p>&nbsp;</p>
+
+<p>Tile categories and how many to expect with outside that range recieving penalty*occurrances and weight being how pool weighs this score when calculating fitness.
+Total tiles in map is 162*14=2268</p>
+<table>
+    <tr>
+        <th>Tile type</th>
+        <th>Target</th>
+        <th>Base weight</th>
+        <th>Reduction rate</th>
+        <th>Fitness Multiplier</th>
+    </tr>
+
+    <tr>
+        <td>Interesting</td>
+        <td><input type="number" value="10" id="interest_target"></td>
+        <td><input type="number" value="50" id="interest_base"></td>
+        <td><input type="number" value="1" id="interest_weight"></td>
+        <td><input type="number" value="1" id="interest_mult"></td>
+   </tr>
+
+    <tr>
+        <td>Enemies</td>
+        <td><input type="number" value="10" id="enemies_target"></td>
+        <td><input type="number" value="10" id="enemies_base"></td>
+        <td><input type="number" value="1" id="enemies_weight"></td>
+        <td><input type="number" value="2" id="enemies_mult"></td>
+    </tr>
+
+    <tr>
+        <td>Hazards</td>
+        <td><input type="number" value="5" id="hazards_target"></td>
+        <td><input type="number" value="5" id="hazards_base"></td>
+        <td><input type="number" value="1" id="hazards_weight"></td>
+        <td><input type="number" value="1" id="hazards_mult"></td>
+    </tr>
+
+    <tr>
+        <td>Rewards</td>
+        <td><input type="number" value="10" id="rewards_target"></td>
+        <td><input type="number" value="20" id="rewards_base"></td>
+        <td><input type="number" value="1" id="rewards_weight"></td>
+        <td><input type="number" value="1" id="rewards_mult"></td>
+    </tr>
+
+    <tr>
+        <td>Leniency</td>
+        <td><input type="number" value="20" id="leniency_target"></td>
+        <td><input type="number" value="25" id="leniency_base"></td>
+        <td><input type="number" value="10" id="leniency_weight"></td>
+        <td><input type="number" value="1" id="leniency_mult"></td>
+    </tr>
+
+    <tr>
+        <td>Leniency</td>
+        <td><input type="number" value="30" id="adjleniency_target"></td>
+        <td><input type="number" value="20" id="adjleniency_base"></td>
+        <td><input type="number" value="1" id="adjleniency_weight"></td>
+        <td><input type="number" value="1" id="adjleniency_mult"></td>
+    </tr>
+
+    <tr>
+        <td>Reachable Column</td>
+        <td><input type="number" value="162" id="reachable_target"></td>
+        <td><input type="number" value="162" id="reachable_base"></td>
+        <td><input type="number" value="1" id="reachable_weight"></td>
+        <td><input type="number" value="1" id="reachable_mult"></td>
+    </tr>
+
+    <tr>
+        <td>Required Jumps</td>
+        <td><input type="number" value="10" id="reqJumps_target"></td>
+        <td><input type="number" value="15" id="reqJumps_base"></td>
+        <td><input type="number" value="1" id="reqJumps_weight"></td>
+        <td><input type="number" value="2" id="reqJumps_mult"></td>
+    </tr>
+
+</table>
+<h3>Mutation frequency</h3>
+<p>
+    Normal breeding weight <input type="number" value="100" id="basicMutatorWeight"><br>
+    Mixed column <input type="number" value="2" id="mixecColumnWeight"><br>
+    Noisy mixed column <input type="number" value="1" id="noisyMixedColumnWeight">
+    noise<input type="number" value="0.1" id="noisyMixedColumnNoise"><br>
+    Shifted column <input type="number" value="5" id="shiftedColumnWeight">
+    min<input type="number" value="-3" id="shiftedColumnMin"><br>
+    max<input type="number" value="3" id="shiftedColumnMax"><br>
+    Duplicated column <input type="number" value="3" id="duplicateColumnWeight"><br>
+    Swap Column <input type="number" value="3" id="swapColumnWeight"><br>
+</p>
+Number of maps to generate per round: <input type="number" value="100" id="rounds"> <br>
+Selection pool size: <input type="number" value="10" id="pool_size"> <br>
+Selection pool size: <input type="number" value="0.01" id="mutationRate"> <br>
+
+<input type="button" id="start_gen" onClick="startFirstRound()" value="Start Generating">
+<input type="button" id="next_round" onClick="startNextRound()" value="Run another round">
+
+<script src="../../../lib/sll.js"></script>
+<script src="../../../lib/sll_gui.js"></script>
+<script src="../../../lib/tileMap.js"></script>
+<script src="../../LiteTuxEditorConfig.js"></script>
+<script src="../../../userMaps.js"></script>
+<script src="../../editingUtil.js"></script>
+<script src="../../stats/stats.js"></script>
+<script src="../../stats/AnalysisScreen.js"></script>
+<script src="EvolutionProto.js"></script>
+<script>
+    let stage, isMouseDown;
+    let canvasRect = new SLLRectangle(0,0,1072,603);
+    let lastUpdate = Date.now();
+    let evolutionGenerator = new EvolutionGenerator(0.1);
+    let currentIteration = 0;
+    let pool = null;
+
+    TILESET_TILES_IMG = new Image();
+    TILESET_TILES_IMG.src = "../../res/spritesheet.png";
+    ARROWS_IMG = new Image();
+    ARROWS_IMG.src = "../../res/arrows.png";
+
+    /**
+     * convert canvas coordinates into layer coordinates
+     * @param event
+     * @returns {SLLPoint}
+     */
+    function canvasMouseCoordsFromEvent(event)
+    {
+        let canvas = document.getElementById('game');
+
+        let ox = event.offsetX;
+        if (ox === undefined)
+            ox = event.pageX-canvas.offsetLeft;
+        let oy = event.offsetY;
+        if (oy === undefined)
+            oy = event.pageY-canvas.offsetTop;
+        return new SLLPoint(ox, oy);
+    }
+
+    /**
+     * handle browser mouseDown event
+     * @param e
+     */
+    function mouseDown(e)
+    {
+        if ( !stage ) return;
+        isMouseDown = true;
+        let p = canvasMouseCoordsFromEvent(e);
+        if (stage.mouseDown(p.x, p.y))
+            draw();
+    }
+
+    /**
+     * handle browser mouseMove event
+     * @param event
+     */
+    function mouseMove(event)
+    {
+        if ( !stage ) return;
+        let p = canvasMouseCoordsFromEvent(event);
+        if (stage.mouseMove(p.x, p.y))
+            draw();
+    }
+
+    /**
+     * handle browser mouseUp event
+     * @param event
+     */
+    function mouseUp(e)
+    {
+        if ( !stage ) return;
+        isMouseDown = false;
+        let p = canvasMouseCoordsFromEvent(e);
+        if (stage.mouseUp(p.x, p.y))
+            draw();
+    }
+
+    /**
+     * Update the display
+     */
+    function draw()
+    {
+        let canvas = document.getElementById('game');
+        if ( ! canvas.getContext)
+            return;
+        let ctx = canvas.getContext('2d');
+        stage.render(ctx, canvasRect);
+    }
+
+    /**
+     * initialize the display
+     */
+    function init()
+    {
+        let ptg = new ProbableTileGenerator(USER_MAPS);
+        ptg.debugDump();
+
+        stage = new AnalysisScreen(canvasRect,null)// new SLLLayer("stage", canvasRect.width, canvasRect.height);
+        stage.setBackgroundColor("#507");
+        let map1 = ptg.generateRandomMap(EDITOR_CONFIG.mapWidth, EDITOR_CONFIG.mapHeight);
+        let map2 =  ptg.generateRandomMap(EDITOR_CONFIG.mapWidth, EDITOR_CONFIG.mapHeight);
+        console.log(map1);
+        console.log(map2);
+        let emap = evolutionGenerator.breed(map1, map2);
+        stage.setLevelMap(emap);
+        draw();
+    }
+
+    /**
+     * get the parameters for the requested fitness function from the values on the form
+     * @param prefix
+     */
+    function setFitnessParameterFromDcoument(prefix) {
+        let target = document.getElementById(prefix+"_target").value;
+        let base = document.getElementById(prefix+"_base").value;
+        let weight = document.getElementById(prefix+"_weight").value;
+        let mult = document.getElementById(prefix+"_mult").value;
+        evolutionGenerator.setFinessParameter(prefix, target, base, weight, mult);
+    }
+
+    /**
+     * get all the fitness function parameters
+     */
+    function setUpFitnessFunctionFromParameters() {
+        setFitnessParameterFromDcoument("interest");
+        setFitnessParameterFromDcoument("enemies");
+        setFitnessParameterFromDcoument("hazards");
+        setFitnessParameterFromDcoument("rewards");
+        setFitnessParameterFromDcoument("leniency");
+        setFitnessParameterFromDcoument("adjleniency");
+        setFitnessParameterFromDcoument("reachable");
+        setFitnessParameterFromDcoument("reqJumps");
+
+        evolutionGenerator.debugDump();
+    }
+
+    /**
+     * get all the mutators based on form parameters
+     */
+    function setUpMutators() {
+        evolutionGenerator.clearMutators();
+        let basicMutatorWeight = document.getElementById("basicMutatorWeight").value;
+        evolutionGenerator.addMutator(new BasicMutator(basicMutatorWeight));
+
+        let mixecColumnWeight = document.getElementById("mixecColumnWeight").value;
+        evolutionGenerator.addMutator(new NoisyTileMutator(mixecColumnWeight, 0));
+
+        let noisyMixedColumnWeight = document.getElementById("noisyMixedColumnWeight").value;
+        let noisyMixedColumnNoise = document.getElementById("noisyMixedColumnNoise").value;
+        evolutionGenerator.addMutator(new NoisyTileMutator(noisyMixedColumnWeight, noisyMixedColumnNoise));
+
+        let shiftedColumnWeight = document.getElementById("shiftedColumnWeight").value;
+        let shiftedColumnMin = document.getElementById("shiftedColumnMin").value;
+        let shiftedColumnMax = document.getElementById("shiftedColumnMax").value;
+        evolutionGenerator.addMutator(new ColumnShiftMutator(shiftedColumnWeight, shiftedColumnMin, shiftedColumnMax));
+
+        let duplicateColumnWeight = document.getElementById("duplicateColumnWeight").value;
+        evolutionGenerator.addMutator(new DuplicateColumnMutator(duplicateColumnWeight));
+
+        let swapColumnWeight = document.getElementById("swapColumnWeight").value;
+        evolutionGenerator.addMutator(new SwapColumnsMutator(swapColumnWeight));
+    }
+
+    /**
+     * run the first round of map generation (self map)
+     */
+    function startFirstRound() {
+        setUpFitnessFunctionFromParameters();
+        setUpMutators();
+        evolutionGenerator.getMapFitness(stage.mainMap);
+        currentIteration = 1;
+        let first = document.getElementById("first_level").value;
+        let rounds = document.getElementById("rounds").value;
+        let poolSize = document.getElementById("pool_size").value;
+        let mutationRate = document.getElementById("mutationRate").value;
+        evolutionGenerator.mutationRate = mutationRate; // kludge
+        let map1 = new TileMap(EDITOR_CONFIG.mapWidth, EDITOR_CONFIG.mapHeight);
+        map1.pasteClip(SMB_LEVELS[first],0,0);
+        pool = evolutionGenerator.makePoolFromSingleMap(map1, rounds, poolSize);
+        console.log(pool)
+        stage.setLevelMap(pool.pool[0]);
+        draw();
+    }
+
+    /** run an addtional round of map generation */
+    function startNextRound() {
+        if (currentIteration === 0)
+            return startFirstRound()
+        ++currentIteration;
+        console.log("Generating iteration " + currentIteration);
+        let rounds = document.getElementById("rounds").value;
+        let poolSize = document.getElementById("pool_size").value;
+        let mutationRate = document.getElementById("mutationRate").value;
+        evolutionGenerator.mutationRate = mutationRate; // kludge
+        pool = evolutionGenerator.breedPool(pool, rounds, poolSize);
+        console.log(pool)
+        stage.setLevelMap(pool.pool[0]);
+        draw();
+    }
+
+</script>
+</body>
+</html>
